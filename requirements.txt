@@ -63,3 +63,5 @@ loguru>=0.7.0
 
 -e .
 
+python-box>=7.0.0
+ensure>=1.0.0
