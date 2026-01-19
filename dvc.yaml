@@ -1,0 +1,37 @@
+stages:
+  data_ingestion:
+    cmd: python -m src.ecommerce_customer_churn.components.data_ingestion
+    deps:
+      - src/ecommerce_customer_churn/components/data_ingestion.py
+    outs:
+      - data/raw/ecommerce_churn.csv
+    
+  data_transformation:
+    cmd: python -m src.ecommerce_customer_churn.components.data_transformation
+    deps:
+      - src/ecommerce_customer_churn/components/data_transformation.py
+      - data/raw/ecommerce_churn.csv
+    outs:
+      - data/processed/X_train_phase1.csv
+      - data/processed/X_test_phase1.csv
+      - data/processed/X_train_phase2.csv
+      - data/processed/X_test_phase2.csv
+      - data/processed/y_train.csv
+      - data/processed/y_test.csv
+      - artifacts/imputation_values.json
+      - artifacts/label_encoders.json
+    
+  model_training:
+    cmd: python -m src.ecommerce_customer_churn.components.model_trainer
+    deps:
+      - src/ecommerce_customer_churn/components/model_trainer.py
+      - data/processed/X_train_phase2.csv
+      - data/processed/X_test_phase2.csv
+      - data/processed/y_train.csv
+      - data/processed/y_test.csv
+    outs:
+      - models/best_model.pkl
+      - models/model_results.json
+    metrics:
+      - models/model_results.json:
+          cache: false
