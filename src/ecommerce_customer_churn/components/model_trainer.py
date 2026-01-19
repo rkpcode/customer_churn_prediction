@@ -63,7 +63,12 @@ class ModelTrainer:
         """
         self.config = config
         self.results = {}
-        logger.info("Model Trainer component initialized")
+        
+        # Setup MLflow
+        mlflow.set_experiment("ecommerce_churn_prediction")
+        mlflow.set_tracking_uri("file:./mlruns")
+        
+        logger.info("Model Trainer component initialized with MLflow tracking")
     
     def evaluate_model(
         self, 
@@ -422,11 +427,42 @@ class ModelTrainer:
                 best_model = tree_results[best_model_name][0]
                 best_scaler = None
             
+            
             logger.info(f"BEST MODEL: {best_model_name}")
             logger.info(f"ROC-AUC: {best_metrics['roc_auc']:.4f}")
             logger.info(f"F1-Score: {best_metrics['f1_score']:.4f}")
             logger.info(f"Precision: {best_metrics['precision']:.4f}")
             logger.info(f"Recall: {best_metrics['recall']:.4f}")
+            
+            # Log to MLflow
+            with mlflow.start_run(run_name=f"best_model_{best_model_name}"):
+                # Log parameters
+                if hasattr(best_model, 'get_params'):
+                    mlflow.log_params(best_model.get_params())
+                
+                # Log metrics
+                mlflow.log_metrics({
+                    "roc_auc": best_metrics['roc_auc'],
+                    "accuracy": best_metrics['accuracy'],
+                    "precision": best_metrics['precision'],
+                    "recall": best_metrics['recall'],
+                    "f1_score": best_metrics['f1_score']
+                })
+                
+                # Log model
+                if best_model_name == "LightGBM":
+                    mlflow.lightgbm.log_model(best_model, "model")
+                elif best_model_name == "XGBoost":
+                    mlflow.xgboost.log_model(best_model, "model")
+                elif best_model_name == "CatBoost":
+                    mlflow.catboost.log_model(best_model, "model")
+                else:
+                    mlflow.sklearn.log_model(best_model, "model")
+                
+                # Log all model results
+                mlflow.log_dict(self.results, "all_model_results.json")
+                
+                logger.info(f"✅ Logged {best_model_name} to MLflow")
             
             # 5. Threshold tuning for best model
             logger.info("\n" + "=" * 80)
