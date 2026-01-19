@@ -1,0 +1,130 @@
+# ============================================
+# CENTRALIZED CONFIGURATION FOR ML PIPELINE
+# ============================================
+
+# Data Configuration
+data:
+  kaggle_dataset: "ankitverma2010/ecommerce-customer-churn-analysis-and-prediction"
+  raw_data_path: "data/raw/ecommerce_churn.csv"
+  processed_data_path: "data/processed/processed_data.csv"
+  train_test_split: 0.2
+  random_state: 42
+  
+# Feature Engineering
+features:
+  target_column: "Churn"
+  drop_columns: ["CustomerID"]
+  numerical_features:
+    - "Tenure"
+    - "CityTier"
+    - "WarehouseToHome"
+    - "HourSpendOnApp"
+    - "NumberOfDeviceRegistered"
+    - "SatisfactionScore"
+    - "NumberOfAddress"
+    - "Complain"
+    - "OrderAmountHikeFromlastYear"
+    - "CouponUsed"
+    - "OrderCount"
+    - "DaySinceLastOrder"
+    - "CashbackAmount"
+  categorical_features:
+    - "PreferredLoginDevice"
+    - "PreferredPaymentMode"
+    - "Gender"
+    - "PreferedOrderCat"
+    - "MaritalStatus"
+  handle_imbalance: true
+  imbalance_strategy: "SMOTE"  # Options: SMOTE, ADASYN, RandomOverSampler
+
+# Model Training - XGBoost
+xgboost:
+  n_estimators: 200
+  max_depth: 6
+  learning_rate: 0.1
+  subsample: 0.8
+  colsample_bytree: 0.8
+  gamma: 0
+  min_child_weight: 1
+  reg_alpha: 0
+  reg_lambda: 1
+  random_state: 42
+  n_jobs: -1
+  eval_metric: "auc"
+
+# Model Training - CatBoost
+catboost:
+  iterations: 200
+  depth: 6
+  learning_rate: 0.1
+  l2_leaf_reg: 3
+  random_state: 42
+  verbose: False
+  eval_metric: "AUC"
+
+# Model Training - LightGBM
+lightgbm:
+  n_estimators: 200
+  max_depth: 6
+  learning_rate: 0.1
+  num_leaves: 31
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_alpha: 0
+  reg_lambda: 1
+  random_state: 42
+  n_jobs: -1
+  verbose: -1
+  metric: "auc"
+
+# Hyperparameter Tuning (Optuna)
+hyperparameter_tuning:
+  enabled: false
+  n_trials: 50
+  timeout: 3600  # 1 hour
+  optimization_metric: "roc_auc"
+
+# Model Evaluation
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "roc_auc"
+  threshold: 0.5
+  save_plots: true
+  plots_path: "artifacts/plots/"
+
+# MLflow Configuration
+mlflow:
+  experiment_name: "ecommerce_churn_prediction"
+  run_name_prefix: "churn_model"
+  tracking_uri: "http://localhost:5000"
+  registry_uri: "sqlite:///mlflow.db"
+  log_models: true
+  log_artifacts: true
+
+# Model Monitoring (Evidently)
+monitoring:
+  enabled: true
+  reference_data_path: "data/processed/reference_data.csv"
+  reports_path: "reports/evidently/"
+  drift_threshold: 0.1
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+  model_path: "models/best_model.pkl"
+  preprocessor_path: "models/preprocessor.pkl"
+
+# Paths
+paths:
+  data_dir: "data/"
+  models_dir: "models/"
+  artifacts_dir: "artifacts/"
+  logs_dir: "logs/"
+  reports_dir: "reports/"
