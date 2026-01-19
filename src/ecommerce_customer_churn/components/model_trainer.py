@@ -27,6 +27,11 @@ from sklearn.metrics import (
 import xgboost as xgb
 from catboost import CatBoostClassifier
 from lightgbm import LGBMClassifier
+import mlflow
+import mlflow.sklearn
+import mlflow.xgboost
+import mlflow.lightgbm
+import mlflow.catboost
 
 from ecommerce_customer_churn.logger import logger
 from ecommerce_customer_churn.exception import ChurnPredictionException
