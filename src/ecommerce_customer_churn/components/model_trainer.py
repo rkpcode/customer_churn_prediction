@@ -64,11 +64,18 @@ class ModelTrainer:
         self.config = config
         self.results = {}
         
-        # Setup MLflow
-        mlflow.set_experiment("ecommerce_churn_prediction")
-        mlflow.set_tracking_uri("file:./mlruns")
+        # Setup MLflow with environment variables
+        import os
+        from dotenv import load_dotenv
+        load_dotenv()
         
-        logger.info("Model Trainer component initialized with MLflow tracking")
+        tracking_uri = os.getenv('MLFLOW_TRACKING_URI', 'file:./mlruns')
+        experiment_name = os.getenv('MLFLOW_EXPERIMENT_NAME', 'ecommerce_churn_prediction')
+        
+        mlflow.set_tracking_uri(tracking_uri)
+        mlflow.set_experiment(experiment_name)
+        
+        logger.info(f"Model Trainer initialized with MLflow tracking: {tracking_uri}")
     
     def evaluate_model(
         self, 
