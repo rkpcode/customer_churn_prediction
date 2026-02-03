@@ -145,14 +145,52 @@ def load_model_and_artifacts():
                 "threshold": 0.247
             }
         
-        # Load training data for SHAP background
-        X_train_path = project_root / "data" / "processed" / "X_train_phase2.csv"
-        X_train = pd.read_csv(X_train_path)
+        # Create synthetic background data for SHAP (training data not available in deployment)
+        # Use feature statistics to create representative background
+        import numpy as np
         
-        # Create SHAP explainer (use sample for speed)
-        explainer = shap.TreeExplainer(model, X_train.sample(min(100, len(X_train)), random_state=42))
+        feature_names = get_feature_names()
+        n_samples = 100
         
-        return model, imputation_values, label_encoders, model_results, explainer, X_train
+        # Create synthetic background data based on typical ranges
+        background_data = pd.DataFrame({
+            'Tenure': np.random.randint(0, 50, n_samples),
+            'CityTier': np.random.choice([1, 2, 3], n_samples),
+            'WarehouseToHome': np.random.randint(5, 40, n_samples),
+            'HourSpendOnApp': np.random.uniform(0, 5, n_samples),
+            'NumberOfDeviceRegistered': np.random.randint(1, 6, n_samples),
+            'SatisfactionScore': np.random.randint(1, 6, n_samples),
+            'NumberOfAddress': np.random.randint(1, 10, n_samples),
+            'Complain': np.random.choice([0, 1], n_samples, p=[0.7, 0.3]),
+            'OrderAmountHikeFromlastYear': np.random.randint(0, 30, n_samples),
+            'CouponUsed': np.random.randint(0, 10, n_samples),
+            'OrderCount': np.random.randint(1, 20, n_samples),
+            'DaySinceLastOrder': np.random.randint(0, 30, n_samples),
+            'CashbackAmount': np.random.uniform(0, 300, n_samples),
+            'PreferredLoginDevice': np.random.randint(0, 3, n_samples),
+            'PreferredPaymentMode': np.random.randint(0, 6, n_samples),
+            'Gender': np.random.choice([0, 1], n_samples),
+            'PreferedOrderCat': np.random.randint(0, 6, n_samples),
+            'MaritalStatus': np.random.randint(0, 3, n_samples),
+            'Tenure_was_missing': np.zeros(n_samples),
+            'HourSpendOnApp_was_missing': np.zeros(n_samples),
+            'OrderCount_was_missing': np.zeros(n_samples),
+            'DaySinceLastOrder_was_missing': np.zeros(n_samples),
+            'OrderAmountHikeFromlastYear_was_missing': np.zeros(n_samples),
+            'CouponUsed_was_missing': np.zeros(n_samples),
+        })
+        
+        # Add engineered features
+        background_data['order_frequency'] = background_data['OrderCount'] / (background_data['Tenure'] + 1)
+        background_data['complaint_rate'] = background_data['Complain'] / (background_data['OrderCount'] + 1)
+        
+        # Ensure correct column order
+        background_data = background_data[feature_names]
+        
+        # Create SHAP explainer with synthetic background
+        explainer = shap.TreeExplainer(model, background_data)
+        
+        return model, imputation_values, label_encoders, model_results, explainer, background_data
         
     except Exception as e:
         st.error(f"❌ Error loading model: {str(e)}")
