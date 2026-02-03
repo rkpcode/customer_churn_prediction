@@ -62,10 +62,8 @@ models/*.joblib
 models/*.h5
 !models/.gitkeep
 
-# Artifacts (allow JSON files for deployment)
-# artifacts/
-!artifacts/*.json
-!artifacts/plots/
+# Artifacts (allow JSON files for deployment, ignore plots)
+artifacts/plots/
 mlruns/
 mlflow.db
 *.db
