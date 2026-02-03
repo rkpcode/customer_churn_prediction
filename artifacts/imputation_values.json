@@ -1,0 +1,30 @@
+{
+    "Tenure": {
+        "strategy": "median",
+        "value": 9.0
+    },
+    "WarehouseToHome": {
+        "strategy": "median",
+        "value": 14.0
+    },
+    "HourSpendOnApp": {
+        "strategy": "median",
+        "value": 3.0
+    },
+    "OrderAmountHikeFromlastYear": {
+        "strategy": "median",
+        "value": 15.0
+    },
+    "CouponUsed": {
+        "strategy": "median",
+        "value": 1.0
+    },
+    "OrderCount": {
+        "strategy": "median",
+        "value": 2.0
+    },
+    "DaySinceLastOrder": {
+        "strategy": "median",
+        "value": 3.0
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "PreferredLoginDevice": [
+        "Computer",
+        "Mobile Phone",
+        "Phone"
+    ],
+    "PreferredPaymentMode": [
+        "CC",
+        "COD",
+        "Cash on Delivery",
+        "Credit Card",
+        "Debit Card",
+        "E wallet",
+        "UPI"
+    ],
+    "Gender": [
+        "Female",
+        "Male"
+    ],
+    "PreferedOrderCat": [
+        "Fashion",
+        "Grocery",
+        "Laptop & Accessory",
+        "Mobile",
+        "Mobile Phone",
+        "Others"
+    ],
+    "MaritalStatus": [
+        "Divorced",
+        "Married",
+        "Single"
+    ]
+}

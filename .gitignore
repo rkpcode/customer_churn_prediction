@@ -54,14 +54,18 @@ data/raw/*
 data/processed/*
 !data/.gitkeep
 
-# Models (tracked by DVC)
-models/*.pkl
+# Models (tracked by DVC - temporarily allowing best_model.pkl for deployment)
+# models/*.pkl
+!models/best_model.pkl
+# models/model_results.json  # Removed from Git tracking, now in DVC
 models/*.joblib
 models/*.h5
 !models/.gitkeep
 
-# Artifacts
-artifacts/
+# Artifacts (allow JSON files for deployment)
+# artifacts/
+!artifacts/*.json
+!artifacts/plots/
 mlruns/
 mlflow.db
 *.db
