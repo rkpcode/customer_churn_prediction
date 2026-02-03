@@ -89,9 +89,9 @@ def setup_dvc_and_pull_models():
         # Pull models from DVC remote
         st.info("📥 Pulling models from DVC remote (DagsHub)... This may take a moment on first run.")
         
-        # Pull specific model files
+        # Pull all DVC tracked files
         pull_result = subprocess.run(
-            ['dvc', 'pull', 'models/best_model.pkl', 'models/model_results.json'],
+            ['dvc', 'pull'],
             capture_output=True,
             text=True,
             timeout=120,  # 2 minute timeout
