@@ -1,0 +1,7 @@
+[core]
+    remote = dagshub
+['remote "dagshub"']
+    url = https://dagshub.com/rkpcode/customer_churn_prediction.dvc
+    auth = basic
+    user = rkpcode
+    password = 201d32ca3a0a16c3bb0b2ed46f019a714413c1f5

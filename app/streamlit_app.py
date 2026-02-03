@@ -63,12 +63,87 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+
+
+@st.cache_resource
+def setup_dvc_and_pull_models():
+    """
+    Setup DVC and pull models from remote storage (DagsHub)
+    This runs once on app startup in Streamlit Cloud
+    """
+    import subprocess
+    
+    try:
+        # Check if DVC is available
+        result = subprocess.run(['dvc', 'version'], capture_output=True, text=True, timeout=10)
+        if result.returncode != 0:
+            st.warning("⚠️ DVC not found. Skipping model pull (using local models).")
+            return False
+        
+        # Configure DVC credentials from Streamlit secrets (if available)
+        if hasattr(st, 'secrets') and 'dagshub' in st.secrets:
+            os.environ['DAGSHUB_USER'] = st.secrets['dagshub']['username']
+            os.environ['DAGSHUB_TOKEN'] = st.secrets['dagshub']['token']
+            st.info("✅ DagsHub credentials configured from Streamlit secrets")
+        
+        # Pull models from DVC remote
+        st.info("📥 Pulling models from DVC remote (DagsHub)... This may take a moment on first run.")
+        
+        # Pull specific model files
+        pull_result = subprocess.run(
+            ['dvc', 'pull', 'models/best_model.pkl', 'models/model_results.json'],
+            capture_output=True,
+            text=True,
+            timeout=120,  # 2 minute timeout
+            cwd=str(project_root)
+        )
+        
+        if pull_result.returncode == 0:
+            st.success("✅ Models pulled successfully from DVC remote!")
+            return True
+        else:
+            st.warning(f"⚠️ DVC pull had issues (may already be cached): {pull_result.stderr[:200]}")
+            return False
+            
+    except subprocess.TimeoutExpired:
+        st.error("⏱️ DVC pull timed out. Using cached models if available.")
+        return False
+    except FileNotFoundError:
+        st.warning("⚠️ DVC not installed. Using local models.")
+        return False
+    except Exception as e:
+        st.warning(f"⚠️ DVC setup error: {str(e)[:200]}. Attempting to use local models.")
+        return False
+
+
 @st.cache_resource
 def load_model_and_artifacts():
-    """Load trained model and preprocessing artifacts"""
+    """Load trained model and preprocessing artifacts with DVC support"""
+    
+    # First, try to pull from DVC (only on first run, cached thereafter)
+    setup_dvc_and_pull_models()
+    
     try:
         # Load model
         model_path = project_root / "models" / "best_model.pkl"
+        
+        # Check if model exists
+        if not model_path.exists():
+            st.error(f"""
+            ⚠️ **Model file not found**: `{model_path}`
+            
+            **Possible solutions**:
+            1. **Run the training pipeline locally**: `python run_pipeline.py`
+            2. **Pull from DVC remote**: `dvc pull models/best_model.pkl`
+            3. **Check DVC configuration**: Ensure DagsHub remote is set up
+            
+            **For deployment**: 
+            - Ensure model is tracked by DVC (`dvc.yaml`)
+            - Push to DVC remote: `dvc push`
+            - Add DagsHub credentials to Streamlit Cloud secrets
+            """)
+            return None, None, None, None, None, None
+        
         model = load_object(model_path)
         
         # Load imputation values
@@ -93,10 +168,27 @@ def load_model_and_artifacts():
         # Create SHAP explainer (use sample for speed)
         explainer = shap.TreeExplainer(model, X_train.sample(min(100, len(X_train)), random_state=42))
         
+        st.success("✅ All models and artifacts loaded successfully!")
+        
         return model, imputation_values, label_encoders, model_results, explainer, X_train
     except Exception as e:
-        st.error(f"Error loading model: {e}")
+        st.error(f"""
+        ❌ **Error loading model**: {str(e)}
+        
+        **Debug Information**:
+        - Project root: `{project_root}`
+        - Model path: `{model_path if 'model_path' in locals() else 'Not set'}`
+        - Error type: `{type(e).__name__}`
+        
+        **Next steps**:
+        1. Check if model file exists locally
+        2. Verify DVC remote configuration
+        3. Check Streamlit Cloud logs for detailed errors
+        """)
+        st.exception(e)  # Show full traceback for debugging
         return None, None, None, None, None, None
+
+
 
 
 def get_feature_names():
